@@ -1,0 +1,61 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/auth/**
+          filters:
+            - RewritePath=/auth/(?<segment>.*), /api/auth/${segment}
+        - id: turf-service
+          uri: lb://turf-service
+          predicates:
+            - Path=/turfs/**
+          filters:
+            - RewritePath=/turfs/(?<segment>.*), /api/turfs/${segment}
+            - GlobalJwtFilter
+        - id: booking-service
+          uri: lb://booking-service
+          predicates:
+            - Path=/bookings/**
+          filters:
+            - RewritePath=/bookings/(?<segment>.*), /api/bookings/${segment}
+            - GlobalJwtFilter
+        - id: payment-service
+          uri: lb://payment-service
+          predicates:
+            - Path=/payments/**
+          filters:
+            - RewritePath=/payments/(?<segment>.*), /api/payments/${segment}
+            - GlobalJwtFilter
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:5173"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka/
+  instance:
+    prefer-ip-address: true
